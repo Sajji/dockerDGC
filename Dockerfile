@@ -1,3 +1,6 @@
+# IMPORT NOTE: Replace all mentions of the word 'woffles' with the username of the user that will be running the Collibra DGC instance. 
+# This is the user that will be created in the Dockerfile.
+
 # Use UBI 9 as the base image
 FROM registry.access.redhat.com/ubi9/ubi
 
@@ -58,28 +61,24 @@ RUN ls -ld /run/postgresql
 # Add user for Collibra DGC
 RUN useradd -m -s /bin/bash woffles
 
+# Create the installation directory and grant write permissions to the 'woffles' user
+RUN mkdir -p /opt/collibra /opt/collibra_data && \
+    chown -R woffles:woffles /opt/collibra /opt/collibra_data
+
 # Copy Collibra installation files
-COPY dgc-linux-5.9.2-33.sh /home/woffles/
-COPY config.json /home/woffles/
-RUN chmod a+x /home/woffles/dgc-linux-5.9.2-33.sh
+COPY dgc-linux-5.9.2-33.sh /tmp/
+COPY config.json /tmp/
+RUN chmod a+x /tmp/dgc-linux-5.9.2-33.sh
 
-# Install Collibra DGC as the woffles user
+# Switch to the 'woffles' user
 USER woffles
-RUN /home/woffles/dgc-linux-5.9.2-33.sh -- --config /home/woffles/config.json
+WORKDIR /tmp
 
-# Switch back to root for further instructions
+# Run the Collibra installer
+RUN ./dgc-linux-5.9.2-33.sh -- --config /tmp/config.json
+
+# Switch back to root for any further commands
 USER root
-RUN /home/woffles/collibra/console/bin/console start
 
-EXPOSE 5432
-EXPOSE 4400
-EXPOSE 4430
-EXPOSE 4404
-EXPOSE 4414
-EXPOSE 4424
-EXPOSE 4434
-EXPOSE 4407
-EXPOSE 4401
-EXPOSE 4402
-EXPOSE 4420
-EXPOSE 4403
+# Expose ports for Collibra
+EXPOSE 4400 4430 4403 4402 4420 4401 4404 4414 4407 4421 4422
